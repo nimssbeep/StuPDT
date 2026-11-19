@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#08080A" />
+  <rect x="3" y="3" width="58" height="58" rx="11" fill="none" stroke="#2A2A35" stroke-width="2" />
+  <text
+    x="10"
+    y="45"
+    font-family="Arial Black, Impact, sans-serif"
+    font-weight="900"
+    font-size="34"
+    fill="#F5E9D8"
+  >S</text>
+  <text
+    x="33"
+    y="45"
+    font-family="Arial Black, Impact, sans-serif"
+    font-weight="900"
+    font-size="34"
+    fill="#0EC7F5"
+  >P</text>
+  <circle cx="51" cy="15" r="5" fill="#F52820" />
+</svg>
