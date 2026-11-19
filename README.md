@@ -6,40 +6,62 @@ A satirical multi-department AI bureaucracy simulator built with React, Vite, Ta
 
 ```text
 ├── api/
+│   ├── core/                          # Configuration & environment variable resolution
+│   ├── schemas/                       # Request payload builders & response schemas
+│   ├── services/                      # Upstream Gemini integration
+│   ├── tests/                         # Backend tests (node:test)
+│   ├── utils/                         # HTTP response helpers
 │   └── gemini.js                      # Vercel Serverless proxy for GEMINI_API_KEY
-├── public/
-│   └── favicon.svg
-├── src/
-│   ├── components/
-│   │   ├── RetroDarkLogo.jsx          # Glowing retro wordmark
-│   │   └── SampleIllustrationSVG.jsx  # Built-in SVG samples for Vision AI
-│   ├── data/
-│   │   └── constants.js               # Quotes, departments, CAPTCHA, math & samples
-│   ├── services/
-│   │   └── gemini.js                  # Gemini chat & vision client with offline fallback
-│   ├── utils/
-│   │   ├── braille.js                 # Unicode Grade-1 Braille translator
-│   │   └── soundEngine.js             # Synthesized Web Audio sound effects
-│   ├── App.jsx
-│   ├── index.css
-│   └── main.jsx
-├── index.html
-├── vercel.json
-└── vite.config.js
+├── frontend/
+│   ├── public/
+│   │   └── favicon.svg
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── accessibility/         # Sign language floating widget
+│   │   │   ├── chat/                  # Chat window, messages, inputs, starters
+│   │   │   ├── common/                # Shared logos, SVGs, and brand assets
+│   │   │   ├── layout/                # Header, banners, status pills, quotes
+│   │   │   └── modals/                # Modular modal dialogs (Bureaucracy, Vision, etc.)
+│   │   ├── constants/                 # Organized constants (quotes, captcha, depts, etc.)
+│   │   ├── contexts/                  # Application state context (StuPDTContext)
+│   │   ├── hooks/                     # Custom React hooks (chat, vision, audio, metrics)
+│   │   ├── services/                  # Frontend API client & offline fallbacks
+│   │   ├── styles/                    # Tailwind stylesheet
+│   │   ├── utils/                     # Sound engine & Braille translator
+│   │   ├── App.jsx                    # Main application orchestrator
+│   │   └── main.jsx
+│   ├── index.html
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── tailwind.config.js
+│   └── vite.config.js
+├── package.json                       # Root scripts (proxies to frontend & api tests)
+└── vercel.json
 ```
 
 ## Local Development
 
 ```bash
+# Run from repository root:
 npm install
 npm run dev
+
+# Or directly in frontend:
+cd frontend
+npm install
+npm run dev
+```
+
+To run backend tests:
+
+```bash
+npm test
 ```
 
 To build for production:
 
 ```bash
 npm run build
-npm run preview
 ```
 
 ## Deploying to Vercel
