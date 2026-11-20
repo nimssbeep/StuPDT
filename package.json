@@ -6,8 +6,11 @@
   "description": "StuPDT — Stupid. Fast. Wrong. A satirical multi-department AI bureaucracy simulator.",
   "scripts": {
     "dev": "npm --prefix frontend run dev",
+    "backend": "uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000",
     "build": "npm --prefix frontend run build",
     "preview": "npm --prefix frontend run preview",
-    "test": "node --test api/tests/*.test.js"
+    "test:api": "node --test api/tests/*.test.js",
+    "test:backend": "pytest backend/tests",
+    "test": "node --test api/tests/*.test.js && pytest backend/tests"
   }
 }

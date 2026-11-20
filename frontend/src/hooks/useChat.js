@@ -26,7 +26,12 @@ function loadStoredMessages() {
     const raw = sessionStorage.getItem(CHAT_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const valid = parsed.filter(
+          (m) => m && typeof m === 'object' && typeof m.text === 'string' && m.id
+        );
+        if (valid.length > 0) return valid;
+      }
     }
   } catch {
     // SessionStorage restricted

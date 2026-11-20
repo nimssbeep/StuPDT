@@ -37,6 +37,7 @@ function StuPDTApp() {
     soundFX,
     triggerToast,
     bumpMetrics,
+    activeModal,
     setActiveModal
   } = useStuPDT();
 
@@ -193,8 +194,11 @@ function StuPDTApp() {
     DEPARTMENTS.find((d) => d.id === activeDeptId) || DEPARTMENTS[0];
 
   const latestAiMessageText = useMemo(() => {
-    const aiMsgs = messages.filter((m) => m.sender === 'ai');
-    return aiMsgs.length > 0 ? aiMsgs[aiMsgs.length - 1].text : 'Hello blind user!';
+    if (!Array.isArray(messages)) return 'Hello blind user!';
+    const aiMsgs = messages.filter((m) => m && m.sender === 'ai');
+    return aiMsgs.length > 0 && aiMsgs[aiMsgs.length - 1]?.text
+      ? aiMsgs[aiMsgs.length - 1].text
+      : 'Hello blind user!';
   }, [messages]);
 
   // Crosshair (+) SVG pattern for Dark Mode poster background
@@ -287,10 +291,60 @@ function StuPDTApp() {
   );
 }
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('StuPDT Error Caught by ErrorBoundary:', error, errorInfo);
+  }
+
+  handleReset = () => {
+    try {
+      sessionStorage.clear();
+      localStorage.clear();
+    } catch {}
+    window.location.reload();
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-[#08080A] text-white flex items-center justify-center p-6">
+          <div className="max-w-lg w-full bg-[#111116] border-2 border-[#F52820] rounded-3xl p-6 shadow-2xl text-center space-y-4">
+            <div className="inline-block px-3 py-1 rounded-full bg-[#F52820]/20 text-[#F52820] text-xs font-black uppercase">
+              CRITICAL BUREAUCRATIC EXCEPTION
+            </div>
+            <h2 className="text-xl font-black">Something went wrong while rendering StuPDT.</h2>
+            <p className="text-xs text-rose-300 bg-black/60 p-3 rounded-xl font-mono text-left overflow-auto max-h-36">
+              {String(this.state.error?.message || this.state.error)}
+            </p>
+            <button
+              onClick={this.handleReset}
+              className="px-5 py-2.5 rounded-xl bg-[#0EC7F5] text-[#08080A] font-black text-xs cursor-pointer hover:bg-[#0bb2dc]"
+            >
+              Clear Corrupted Storage & Reload
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   return (
-    <StuPDTProvider>
-      <StuPDTApp />
-    </StuPDTProvider>
+    <ErrorBoundary>
+      <StuPDTProvider>
+        <StuPDTApp />
+      </StuPDTProvider>
+    </ErrorBoundary>
   );
 }
