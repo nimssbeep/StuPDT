@@ -63,28 +63,41 @@ export function StuPDTProvider({ children }) {
   }, [refreshBackendStatus]);
 
   // Telemetry Metrics with Session Storage Persistence
-  const initialMetrics = getStoredJson(STORAGE_KEYS.METRICS, {
+  const defaultMetrics = {
     specialistsConsulted: 1,
     internalMeetings: 14,
     minutesWasted: 6,
     userSatisfaction: -18,
     chaosMeter: 15
-  });
+  };
+
+  const storedMetrics = getStoredJson(STORAGE_KEYS.METRICS, null);
+  const initialMetrics = { ...defaultMetrics, ...(storedMetrics || {}) };
 
   const [specialistsConsulted, setSpecialistsConsulted] = useState(
-    initialMetrics.specialistsConsulted
+    typeof initialMetrics.specialistsConsulted === 'number'
+      ? initialMetrics.specialistsConsulted
+      : defaultMetrics.specialistsConsulted
   );
   const [internalMeetings, setInternalMeetings] = useState(
-    initialMetrics.internalMeetings
+    typeof initialMetrics.internalMeetings === 'number'
+      ? initialMetrics.internalMeetings
+      : defaultMetrics.internalMeetings
   );
   const [minutesWasted, setMinutesWasted] = useState(
-    initialMetrics.minutesWasted
+    typeof initialMetrics.minutesWasted === 'number'
+      ? initialMetrics.minutesWasted
+      : defaultMetrics.minutesWasted
   );
   const [userSatisfaction, setUserSatisfaction] = useState(
-    initialMetrics.userSatisfaction
+    typeof initialMetrics.userSatisfaction === 'number'
+      ? initialMetrics.userSatisfaction
+      : defaultMetrics.userSatisfaction
   );
   const [chaosMeter, setChaosMeter] = useState(
-    initialMetrics.chaosMeter
+    typeof initialMetrics.chaosMeter === 'number'
+      ? initialMetrics.chaosMeter
+      : defaultMetrics.chaosMeter
   );
   const [isPremiumVIP, setIsPremiumVIP] = useState(() =>
     getStoredJson(STORAGE_KEYS.VIP, false)
