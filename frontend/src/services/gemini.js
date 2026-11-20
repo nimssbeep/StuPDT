@@ -1,3 +1,6 @@
+import { getOfflineDepartmentReply } from './offlineReplies';
+import { API_BASE_URL } from './apiClient';
+
 const DEFAULT_MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-3-flash-preview';
 
 const VISION_PROMPT = `You are StuPDT Vision™, a hilariously unhelpful, tautological AI image detector.
@@ -8,25 +11,6 @@ Look at the main object, food, or drink in this image and return STRICT JSON:
 - verdict: deadpan corporate sentence saying you are 100% confident that this [detectedItem] is indeed a [detectedItem], adding zero useful information.
 - ingredients: array with ONLY ONE STRING which is literally just the detectedItem itself! (e.g., for spaghetti -> ["Spaghetti"], for pizza -> ["Pizza"], for rock -> ["Rock (100%)"]).
 - proTip: a hilariously obvious tautological tip about the item.`;
-
-function getOfflineDepartmentReply(userText, targetDept) {
-  if (targetDept.id === 'verifier') {
-    return `Thank you for reaching us! Before we look at "${userText}", could you confirm in writing that you are a human currently experiencing this question?`;
-  }
-  if (targetDept.id === 'supervisor') {
-    return `Congratulations on confirming your status! Unfortunately, under Policy 404-B, we strictly assist people who do NOT have "${userText}" as a problem.`;
-  }
-  if (targetDept.id === 'form_ai') {
-    return `We cannot process "${userText}" yet because Form 001-B requires Form 001-C to be notarized before you even thought of this question.`;
-  }
-  if (targetDept.id === 'excuse_ai') {
-    return `After extensive analysis, we are 99.97% confident that your issue with "${userText}" is caused by Mercury retrograde and your device feeling emotionally fragile.`;
-  }
-  if (targetDept.id === 'ceo') {
-    return `As THE CEO AI, I am proud to say I have never answered a single question. Synergizing your ticket straight back to Assistant #001!`;
-  }
-  return `We sincerely apologize for the inconvenience! Your concern has been forwarded to someone who will immediately forward it to someone else.`;
-}
 
 async function fetchJsonWithRetry(url, body, retries = 2, delay = 800) {
   try {
@@ -71,9 +55,9 @@ RULES:
       systemInstruction: { parts: [{ text: systemPrompt }] }
     });
   } else {
-    // Use the Vercel serverless proxy if GEMINI_API_KEY is configured in Vercel
+    // Use the backend/Vercel serverless proxy if GEMINI_API_KEY is configured
     data = await fetchJsonWithRetry(
-      '/api/gemini',
+      `${API_BASE_URL}/api/gemini`,
       {
         mode: 'chat',
         userText,
@@ -134,7 +118,7 @@ export async function analyzeImageWithStuPDTVision(base64Data, mimeType) {
     });
   } else {
     data = await fetchJsonWithRetry(
-      '/api/gemini',
+      `${API_BASE_URL}/api/gemini`,
       {
         mode: 'vision',
         mimeType,
