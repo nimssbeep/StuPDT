@@ -1,8 +1,31 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { toBraille } from '../utils/braille';
 import { soundFX } from '../utils/soundEngine';
+import { checkBackendHealth } from '../services/apiClient';
 
 const StuPDTContext = createContext(null);
+
+const STORAGE_KEYS = {
+  METRICS: 'stupdt_telemetry_metrics',
+  VIP: 'stupdt_is_vip'
+};
+
+function getStoredJson(key, fallback) {
+  try {
+    const val = sessionStorage.getItem(key);
+    return val ? JSON.parse(val) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function setStoredJson(key, val) {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(val));
+  } catch {
+    // SessionStorage unavailable or restricted
+  }
+}
 
 export function StuPDTProvider({ children }) {
   // Theme & Accessibility
@@ -26,13 +49,61 @@ export function StuPDTProvider({ children }) {
     });
   }, []);
 
-  // Telemetry Metrics
-  const [specialistsConsulted, setSpecialistsConsulted] = useState(1);
-  const [internalMeetings, setInternalMeetings] = useState(14);
-  const [minutesWasted, setMinutesWasted] = useState(6);
-  const [userSatisfaction, setUserSatisfaction] = useState(-18);
-  const [chaosMeter, setChaosMeter] = useState(15);
-  const [isPremiumVIP, setIsPremiumVIP] = useState(false);
+  // Backend Health Status: 'checking' | 'connected' | 'offline'
+  const [backendStatus, setBackendStatus] = useState('checking');
+
+  const refreshBackendStatus = useCallback(async () => {
+    setBackendStatus('checking');
+    const health = await checkBackendHealth();
+    setBackendStatus(health.online ? 'connected' : 'offline');
+  }, []);
+
+  useEffect(() => {
+    refreshBackendStatus();
+  }, [refreshBackendStatus]);
+
+  // Telemetry Metrics with Session Storage Persistence
+  const initialMetrics = getStoredJson(STORAGE_KEYS.METRICS, {
+    specialistsConsulted: 1,
+    internalMeetings: 14,
+    minutesWasted: 6,
+    userSatisfaction: -18,
+    chaosMeter: 15
+  });
+
+  const [specialistsConsulted, setSpecialistsConsulted] = useState(
+    initialMetrics.specialistsConsulted
+  );
+  const [internalMeetings, setInternalMeetings] = useState(
+    initialMetrics.internalMeetings
+  );
+  const [minutesWasted, setMinutesWasted] = useState(
+    initialMetrics.minutesWasted
+  );
+  const [userSatisfaction, setUserSatisfaction] = useState(
+    initialMetrics.userSatisfaction
+  );
+  const [chaosMeter, setChaosMeter] = useState(
+    initialMetrics.chaosMeter
+  );
+  const [isPremiumVIP, setIsPremiumVIP] = useState(() =>
+    getStoredJson(STORAGE_KEYS.VIP, false)
+  );
+
+  // Save metrics to storage whenever they change
+  useEffect(() => {
+    setStoredJson(STORAGE_KEYS.METRICS, {
+      specialistsConsulted,
+      internalMeetings,
+      minutesWasted,
+      userSatisfaction,
+      chaosMeter
+    });
+  }, [specialistsConsulted, internalMeetings, minutesWasted, userSatisfaction, chaosMeter]);
+
+  useEffect(() => {
+    setStoredJson(STORAGE_KEYS.VIP, isPremiumVIP);
+  }, [isPremiumVIP]);
 
   // Toast Notification
   const [toastNotification, setToastNotification] = useState(null);
@@ -61,6 +132,18 @@ export function StuPDTProvider({ children }) {
     [triggerToast]
   );
 
+  const resetMetrics = useCallback(() => {
+    setSpecialistsConsulted(1);
+    setInternalMeetings(14);
+    setMinutesWasted(0);
+    setUserSatisfaction(-18);
+    setChaosMeter(15);
+    setIsPremiumVIP(false);
+    sessionStorage.removeItem(STORAGE_KEYS.METRICS);
+    sessionStorage.removeItem(STORAGE_KEYS.VIP);
+    triggerToast('All bureaucracy metrics reset back to baseline chaos!');
+  }, [triggerToast]);
+
   // Active Modals
   // 'org_about' | 'bureaucracy' | 'vision' | 'toolkit' | 'apology_pdf' | 'emotional' | 'loading_sim' | 'report' | 'grand_finale'
   const [activeModal, setActiveModal] = useState(null);
@@ -69,7 +152,7 @@ export function StuPDTProvider({ children }) {
   const [quoteIdx, setQuoteIdx] = useState(0);
   const nextQuote = useCallback(() => {
     soundFX.playChime();
-    setQuoteIdx((prev) => (prev + 1) % 12); // STUPID_QUOTES length is 12
+    setQuoteIdx((prev) => (prev + 1) % 12);
   }, []);
 
   const value = {
@@ -87,6 +170,10 @@ export function StuPDTProvider({ children }) {
     toggleMute,
     soundFX,
 
+    // Backend
+    backendStatus,
+    refreshBackendStatus,
+
     // Telemetry
     specialistsConsulted,
     internalMeetings,
@@ -94,6 +181,7 @@ export function StuPDTProvider({ children }) {
     userSatisfaction,
     chaosMeter,
     bumpMetrics,
+    resetMetrics,
     isPremiumVIP,
     setIsPremiumVIP,
 

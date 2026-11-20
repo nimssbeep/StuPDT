@@ -33,7 +33,15 @@ export function useVisionScan(onPostScanToChat) {
   const handleImageFileUpload = useCallback(
     (file) => {
       if (!file || !file.type.startsWith('image/')) {
+        soundFX.playErrorBuzz();
         triggerToast('Please upload a valid JPG, PNG, or WebP image file!');
+        return;
+      }
+
+      const MAX_SIZE_MB = 5;
+      if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+        soundFX.playErrorBuzz();
+        triggerToast(`File too large! Max allowed is ${MAX_SIZE_MB}MB to prevent overwhelming our bureaucracy.`);
         return;
       }
 

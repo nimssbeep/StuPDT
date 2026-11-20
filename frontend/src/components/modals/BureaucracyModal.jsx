@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Stamp } from 'lucide-react';
+import { Stamp, Loader2 } from 'lucide-react';
 import { useStuPDT } from '../../contexts/StuPDTContext';
+import { submitBureaucracyForm } from '../../services/bureaucracyService';
 
 export function BureaucracyModal({ onFormApprovedAndShredded }) {
   const { activeModal, setActiveModal, isDarkMode, soundFX, bumpMetrics, tx } = useStuPDT();
@@ -11,15 +12,35 @@ export function BureaucracyModal({ onFormApprovedAndShredded }) {
   const [form001C, setForm001C] = useState(false);
   const [formError, setFormError] = useState(null);
   const [formStamped, setFormStamped] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (activeModal !== 'bureaucracy') return null;
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
-    soundFX.playErrorBuzz();
-    setFormError(
-      'CATCH-22 ERROR: Your request cannot proceed because Form 001-B requires Form 001-C to be notarized BEFORE you started filling out Form 001.'
-    );
+    setIsSubmitting(true);
+    soundFX.playScanBeep();
+
+    try {
+      const res = await submitBureaucracyForm({
+        problem: form001,
+        reason: form001A,
+        notarizedCode: form001B,
+        confirmed: form001C
+      });
+      soundFX.playErrorBuzz();
+      setFormError(
+        res?.error ||
+          'CATCH-22 ERROR: Your request cannot proceed because Form 001-B requires Form 001-C to be notarized BEFORE you started filling out Form 001.'
+      );
+    } catch {
+      soundFX.playErrorBuzz();
+      setFormError(
+        'BUREAUCRATIC NETWORK REJECTION: The Form Approval Committee is on an indefinite lunch break.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleRubberStampOverride = () => {
@@ -149,9 +170,17 @@ export function BureaucracyModal({ onFormApprovedAndShredded }) {
           <div className="flex flex-wrap justify-end gap-2 pt-2">
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#0EC7F5] text-[#08080A] font-black cursor-pointer"
+              disabled={isSubmitting}
+              className="px-4 py-2 rounded-xl bg-[#0EC7F5] disabled:opacity-50 text-[#08080A] font-black cursor-pointer flex items-center gap-1.5"
             >
-              {tx('Submit Forms')}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{tx('Evaluating Catch-22...')}</span>
+                </>
+              ) : (
+                <span>{tx('Submit Forms')}</span>
+              )}
             </button>
             {formError && (
               <button

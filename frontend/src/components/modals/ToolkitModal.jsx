@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, HeartHandshake, Loader2, HelpCircle, Crown, Wrench } from 'lucide-react';
+import { FileText, HeartHandshake, Loader2, HelpCircle, Crown, Wrench, RotateCcw } from 'lucide-react';
 import { useStuPDT } from '../../contexts/StuPDTContext';
 
 export function ToolkitModal() {
@@ -8,6 +8,7 @@ export function ToolkitModal() {
     setActiveModal,
     isDarkMode,
     setIsPremiumVIP,
+    resetMetrics,
     soundFX,
     triggerToast,
     tx
@@ -107,6 +108,25 @@ export function ToolkitModal() {
             <p className="text-xs font-bold opacity-80 mt-0.5">
               {tx('Pay ₱999 in imaginary pesos to get the exact same useless service, faster-looking!')}
             </p>
+          </button>
+
+          <button
+            onClick={() => {
+              soundFX.playRubberStamp();
+              resetMetrics();
+              setActiveModal(null);
+            }}
+            className={`sm:col-span-2 p-3 rounded-2xl border text-left cursor-pointer flex items-center justify-between ${
+              isDarkMode
+                ? 'bg-[#181820] hover:bg-[#23232F] border-rose-500/40 text-rose-300'
+                : 'bg-rose-50 hover:bg-rose-100 border-2 border-rose-400 text-rose-800'
+            }`}
+          >
+            <div className="flex items-center gap-2 text-xs font-black">
+              <RotateCcw className="w-4 h-4" />
+              <span>{tx('Reset Bureaucracy & Purge Memory')}</span>
+            </div>
+            <span className="text-[10px] uppercase font-bold opacity-75">{tx('Start Over')}</span>
           </button>
         </div>
       </div>

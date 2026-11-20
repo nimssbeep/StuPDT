@@ -1,13 +1,49 @@
 import React, { useState } from 'react';
-import { FileText } from 'lucide-react';
+import { FileText, Download } from 'lucide-react';
 import { APOLOGY_PDF_PAGES } from '../../constants';
 import { useStuPDT } from '../../contexts/StuPDTContext';
 
 export function ApologyPdfModal() {
-  const { activeModal, setActiveModal, isDarkMode, tx } = useStuPDT();
+  const { activeModal, setActiveModal, isDarkMode, tx, soundFX, triggerToast } = useStuPDT();
   const [pdfPageIndex, setPdfPageIndex] = useState(0);
 
   if (activeModal !== 'apology_pdf') return null;
+
+  const handleDownloadFullApology = () => {
+    soundFX.playRubberStamp();
+    const content = [
+      '=========================================================================',
+      '          OFFICIAL STUPDT LEGAL APOLOGY MEMORANDUM (FORM AP-999)         ',
+      '=========================================================================',
+      'DATE: ' + new Date().toISOString(),
+      'CLASSIFICATION: MAXIMUM CORPORATE NON-COMPLIANCE',
+      'PAGES: 47 (Condensed for Human Sanity)',
+      '=========================================================================\n',
+      ...APOLOGY_PDF_PAGES.map(
+        (p, i) =>
+          `[EXCERPT ${i + 1} OF 47: ${p.title.toUpperCase()}]\n` +
+          `Sub-clause: ${p.subtitle}\n\n` +
+          `${p.body}\n\n` +
+          `Legal Footnote: ${p.footnote}\n` +
+          '-------------------------------------------------------------------------\n'
+      ),
+      'CONCLUSION:',
+      'We hereby solemnly confirm that this document resolves exactly 0% of your concerns.',
+      'Thank you for partnering with StuPDT Bureaucracy Solutions™.'
+    ].join('\n');
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'StuPDT_Official_Legal_Apology_47_Pages.txt';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    triggerToast('Official 47-Page Legal Apology Document Downloaded!');
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -44,23 +80,35 @@ export function ApologyPdfModal() {
           </div>
         </div>
 
-        <div className="flex justify-between items-center">
-          <button
-            onClick={() => setPdfPageIndex((p) => Math.max(0, p - 1))}
-            disabled={pdfPageIndex === 0}
-            className="px-3 py-1.5 rounded-xl bg-slate-700 text-white disabled:opacity-40 text-xs font-black cursor-pointer"
-          >
-            {tx('← Prev')}
-          </button>
+        <div className="flex justify-between items-center gap-2 pt-2 border-t border-slate-700/40">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPdfPageIndex((p) => Math.max(0, p - 1))}
+              disabled={pdfPageIndex === 0}
+              className="px-3 py-1.5 rounded-xl bg-slate-700 text-white disabled:opacity-40 text-xs font-black cursor-pointer"
+            >
+              {tx('← Prev')}
+            </button>
+            <button
+              onClick={() => setPdfPageIndex((p) => Math.min(APOLOGY_PDF_PAGES.length - 1, p + 1))}
+              disabled={pdfPageIndex === APOLOGY_PDF_PAGES.length - 1}
+              className="px-3 py-1.5 rounded-xl bg-[#0EC7F5] text-[#08080A] disabled:opacity-40 text-xs font-black cursor-pointer"
+            >
+              {tx('Next →')}
+            </button>
+          </div>
+
           <span className="text-xs font-black">
             {tx(`Excerpt ${pdfPageIndex + 1} of ${APOLOGY_PDF_PAGES.length}`)}
           </span>
+
           <button
-            onClick={() => setPdfPageIndex((p) => Math.min(APOLOGY_PDF_PAGES.length - 1, p + 1))}
-            disabled={pdfPageIndex === APOLOGY_PDF_PAGES.length - 1}
-            className="px-3 py-1.5 rounded-xl bg-[#0EC7F5] text-[#08080A] disabled:opacity-40 text-xs font-black cursor-pointer"
+            onClick={handleDownloadFullApology}
+            className="px-3 py-1.5 rounded-xl bg-[#1FE03F] text-[#08080A] text-xs font-black cursor-pointer flex items-center gap-1.5"
+            title="Download full 47-page apology document"
           >
-            {tx('Next →')}
+            <Download className="w-3.5 h-3.5" />
+            <span>{tx('Download .TXT')}</span>
           </button>
         </div>
       </div>

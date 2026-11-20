@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { StuPDTProvider, useStuPDT } from './contexts/StuPDTContext';
 import { DEPARTMENTS, CAPTCHA_TILES, LEGAL_MATH_PROBLEMS } from './constants';
 import { useChat } from './hooks/useChat';
@@ -75,6 +75,21 @@ function StuPDTApp() {
   const [mathInput, setMathInput] = useState('');
   const [mathError, setMathError] = useState('');
   const [showMathHint, setShowMathHint] = useState(false);
+
+  // Global Escape key listener to dismiss active modals
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (themeGateStep) {
+          setThemeGateStep(null);
+        } else if (activeModal) {
+          setActiveModal(null);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [themeGateStep, activeModal, setActiveModal]);
 
   const handleThemeButtonClick = () => {
     if (isDarkMode) {

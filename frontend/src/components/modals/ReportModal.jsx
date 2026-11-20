@@ -1,4 +1,5 @@
 import React from 'react';
+import { Download } from 'lucide-react';
 import { STUPID_QUOTES } from '../../constants';
 import { useStuPDT } from '../../contexts/StuPDTContext';
 
@@ -10,13 +11,48 @@ export function ReportModal() {
     specialistsConsulted,
     internalMeetings,
     userSatisfaction,
+    minutesWasted,
+    chaosMeter,
     quoteIdx,
+    soundFX,
+    triggerToast,
     tx
   } = useStuPDT();
 
   if (activeModal !== 'report') return null;
 
   const reportQuote = STUPID_QUOTES[(quoteIdx + 3) % STUPID_QUOTES.length];
+
+  const handleExportAuditTrail = () => {
+    soundFX.playRubberStamp();
+    const auditData = {
+      agency: 'StuPDT Multi-Department Bureaucracy Simulator',
+      generatedAt: new Date().toISOString(),
+      problemsSolvedPercent: 0,
+      departmentsConsulted: specialistsConsulted,
+      internalMeetingsHeld: internalMeetings,
+      minutesWasted,
+      chaosLevelPercent: chaosMeter,
+      satisfactionRatingPercent: userSatisfaction,
+      executiveSummary: reportQuote.text,
+      quoteAttribution: reportQuote.author,
+      officialVerdict: 'Case permanently open due to deliberate administrative inefficiency.'
+    };
+
+    const blob = new Blob([JSON.stringify(auditData, null, 2)], {
+      type: 'application/json;charset=utf-8'
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `StuPDT_Audit_Report_${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    triggerToast('Audit Trail Exported as JSON!');
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
@@ -74,12 +110,25 @@ export function ReportModal() {
           {tx('"Thank you for choosing StuPDT! We hope you never need us again. Unfortunately, you will."')}
         </p>
 
-        <button
-          onClick={() => setActiveModal(null)}
-          className="w-full py-2.5 rounded-xl bg-[#0EC7F5] text-[#08080A] font-black text-xs cursor-pointer"
-        >
-          {tx('Back to Chat')}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExportAuditTrail}
+            className={`flex-1 py-2.5 rounded-xl border text-xs font-black cursor-pointer flex items-center justify-center gap-1.5 ${
+              isDarkMode
+                ? 'bg-[#181820] hover:bg-[#23232F] border-[#0EC7F5] text-[#0EC7F5]'
+                : 'bg-white hover:bg-[#F4F9FF] border-2 border-[#071638] text-[#071638]'
+            }`}
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>{tx('Export Audit Log')}</span>
+          </button>
+          <button
+            onClick={() => setActiveModal(null)}
+            className="flex-1 py-2.5 rounded-xl bg-[#0EC7F5] text-[#08080A] font-black text-xs cursor-pointer"
+          >
+            {tx('Back to Chat')}
+          </button>
+        </div>
       </div>
     </div>
   );

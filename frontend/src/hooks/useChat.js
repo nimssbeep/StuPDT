@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { DEPARTMENTS, BLAME_TARGETS } from '../constants';
-import { generateDysfunctionalAIResponse } from '../services/gemini';
+import { sendChatMessage } from '../services/chatService';
 import { useStuPDT } from '../contexts/StuPDTContext';
 
 const INITIAL_MESSAGES = [
@@ -19,6 +19,21 @@ const INITIAL_MESSAGES = [
   }
 ];
 
+const CHAT_STORAGE_KEY = 'stupdt_chat_history';
+
+function loadStoredMessages() {
+  try {
+    const raw = sessionStorage.getItem(CHAT_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {
+    // SessionStorage restricted
+  }
+  return INITIAL_MESSAGES;
+}
+
 export function useChat() {
   const { soundFX, bumpMetrics, isPremiumVIP, setActiveModal } = useStuPDT();
 
@@ -27,7 +42,16 @@ export function useChat() {
   const [inputValue, setInputValue] = useState('');
   const [isTransferring, setIsTransferring] = useState(false);
   const [transferTarget, setTransferTarget] = useState(null);
-  const [messages, setMessages] = useState(INITIAL_MESSAGES);
+  const [messages, setMessages] = useState(loadStoredMessages);
+
+  // Sync messages to sessionStorage
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
+    } catch {
+      // Storage quota or restriction
+    }
+  }, [messages]);
 
   const [suggestedQuickReply, setSuggestedQuickReply] = useState({
     label: 'Try Exam Demo: "I have an exam tomorrow. Can you help me study?"',
@@ -39,6 +63,17 @@ export function useChat() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTransferring]);
+
+  const clearChatHistory = useCallback(() => {
+    setMessages(INITIAL_MESSAGES);
+    setActiveDeptId('intake');
+    setExamDemoStep(0);
+    try {
+      sessionStorage.removeItem(CHAT_STORAGE_KEY);
+    } catch {
+      // Ignore
+    }
+  }, []);
 
   const performDepartmentTransfer = useCallback(
     (nextDept, responseMessageText, customBlame, postCallback) => {
@@ -216,13 +251,13 @@ export function useChat() {
         return;
       }
 
-      // 4. GENERAL QUESTION -> ROTATE THROUGH DEPARTMENTS USING GEMINI API
+      // 4. GENERAL QUESTION -> ROTATE THROUGH DEPARTMENTS USING BACKEND/GEMINI API
       bumpMetrics(1, 18, 7);
       const currentIndex = DEPARTMENTS.findIndex((d) => d.id === activeDeptId);
       const nextDept = DEPARTMENTS[(currentIndex + 1) % DEPARTMENTS.length];
       setIsTransferring(true);
       setTransferTarget(nextDept);
-      const reply = await generateDysfunctionalAIResponse(textToSend, nextDept);
+      const reply = await sendChatMessage(textToSend, nextDept, messages.slice(-4));
 
       performDepartmentTransfer(nextDept, reply, null, () => {
         setSuggestedQuickReply({
@@ -231,7 +266,7 @@ export function useChat() {
         });
       });
     },
-    [inputValue, isTransferring, examDemoStep, activeDeptId, bumpMetrics, soundFX, setActiveModal, performDepartmentTransfer]
+    [inputValue, isTransferring, examDemoStep, activeDeptId, bumpMetrics, soundFX, setActiveModal, performDepartmentTransfer, messages]
   );
 
   const addAiMessage = useCallback((msg) => {
@@ -243,6 +278,7 @@ export function useChat() {
     setActiveDeptId,
     messages,
     addAiMessage,
+    clearChatHistory,
     inputValue,
     setInputValue,
     isTransferring,

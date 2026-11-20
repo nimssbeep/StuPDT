@@ -9,7 +9,9 @@ export function StatusPills({ activeDepartmentObj }) {
     chaosMeter,
     specialistsConsulted,
     minutesWasted,
-    setActiveModal
+    setActiveModal,
+    backendStatus,
+    refreshBackendStatus
   } = useStuPDT();
 
   return (
@@ -110,6 +112,39 @@ export function StatusPills({ activeDepartmentObj }) {
           {tx('0%')}
         </span>
       </button>
+
+      {/* Backend Connectivity Status Bar */}
+      <div className="sm:col-span-3 flex items-center justify-between px-3 py-1.5 rounded-xl border border-slate-700/30 text-[11px] font-semibold">
+        <div className="flex items-center gap-2">
+          <span
+            className={`w-2 h-2 rounded-full shrink-0 ${
+              backendStatus === 'connected'
+                ? 'bg-[#1FE03F] shadow-[0_0_8px_#1FE03F]'
+                : backendStatus === 'checking'
+                ? 'bg-slate-400 animate-pulse'
+                : 'bg-[#FFE600] shadow-[0_0_8px_#FFE600]'
+            }`}
+          />
+          <span className="opacity-80">
+            {tx(
+              backendStatus === 'connected'
+                ? 'Backend: Connected (Ready to accomplish nothing)'
+                : backendStatus === 'checking'
+                ? 'Backend: Verifying Bureaucracy...'
+                : 'Backend: Offline (Running on Local Autonomous Chaos)'
+            )}
+          </span>
+        </div>
+        <button
+          onClick={refreshBackendStatus}
+          className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition ${
+            isDarkMode ? 'hover:bg-white/10 text-slate-300' : 'hover:bg-black/5 text-[#071638]'
+          }`}
+          title="Retry backend health check"
+        >
+          {tx('Ping API')}
+        </button>
+      </div>
     </div>
   );
 }

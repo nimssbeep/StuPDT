@@ -1,4 +1,5 @@
 import { getOfflineDepartmentReply } from './offlineReplies';
+import { API_BASE_URL } from './apiClient';
 
 const DEFAULT_MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-3-flash-preview';
 
@@ -54,9 +55,9 @@ RULES:
       systemInstruction: { parts: [{ text: systemPrompt }] }
     });
   } else {
-    // Use the Vercel serverless proxy if GEMINI_API_KEY is configured in Vercel
+    // Use the backend/Vercel serverless proxy if GEMINI_API_KEY is configured
     data = await fetchJsonWithRetry(
-      '/api/gemini',
+      `${API_BASE_URL}/api/gemini`,
       {
         mode: 'chat',
         userText,
@@ -117,7 +118,7 @@ export async function analyzeImageWithStuPDTVision(base64Data, mimeType) {
     });
   } else {
     data = await fetchJsonWithRetry(
-      '/api/gemini',
+      `${API_BASE_URL}/api/gemini`,
       {
         mode: 'vision',
         mimeType,
